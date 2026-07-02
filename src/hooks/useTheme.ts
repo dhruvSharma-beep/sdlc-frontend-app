@@ -1,18 +1,31 @@
-import { useState, useEffect } from 'react';
+'use client';
+import { useState, useEffect, useCallback } from 'react';
 
-type Theme = 'light' | 'dark' | 'system';
+export type ThemeChoice = 'light' | 'dark' | 'system';
+
+const STORAGE_KEY = 'acme:theme';
+
+function applyTheme(choice: ThemeChoice) {
+  const root = document.documentElement;
+  if (choice === 'system') { root.removeAttribute('data-theme'); }
+  else { root.setAttribute('data-theme', choice); }
+}
 
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(() =>
-    typeof window === 'undefined' ? 'system' : (localStorage.getItem('theme') as Theme) || 'system'
-  );
+  const [theme, setThemeState] = useState<ThemeChoice>('system');
 
+  // Hydrate from localStorage once mounted (SSR guard)
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'system') { root.removeAttribute('data-theme'); }
-    else { root.setAttribute('data-theme', theme); }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    const stored = (localStorage.getItem(STORAGE_KEY) as ThemeChoice) ?? 'system';
+    setThemeState(stored);
+    applyTheme(stored);
+  }, []);
+
+  const setTheme = useCallback((next: ThemeChoice) => {
+    setThemeState(next);
+    localStorage.setItem(STORAGE_KEY, next);
+    applyTheme(next);
+  }, []);
 
   return { theme, setTheme };
 }
