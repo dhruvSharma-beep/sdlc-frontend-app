@@ -1,0 +1,31 @@
+/* Navigation — SDLC-3: iOS 17 Safari stacking context fix */
+
+.nav-container {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-default);
+  /* Fix: force GPU compositing layer to escape video stacking context */
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 200;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  min-width: 200px;
+  /* Fix: new stacking context prevents bleed-through */
+  isolation: isolate;
+}
+
+/* iOS Safari hardware acceleration */
+@supports (-webkit-touch-callout: none) {
+  .nav-container { -webkit-transform: translateZ(0); -webkit-backface-visibility: hidden; }
+}
